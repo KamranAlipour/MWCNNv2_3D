@@ -167,14 +167,16 @@ def set_channel(l, n_channel):
     return [_set_channel(_l) for _l in l]
 
 def np2Tensor(l, rgb_range):
-    def _np2Tensor(img):
-        np_transpose = np.ascontiguousarray(img.transpose((2, 0, 1)))
-        tensor = torch.from_numpy(np_transpose).float()
-        tensor.mul_(rgb_range / 255.0)
+    #def _np2Tensor(img):
+        #np_transpose = np.ascontiguousarray(img.transpose((2, 0, 1)))
+        #tensor = torch.from_numpy(np_transpose).float()
+        #tensor.mul_(rgb_range / 255.0)
+        #tensor = torch.from_numpy(np.array(l)).float()
+        #print(tensor.shape)
+        #return tensor
 
-        return tensor
-
-    return [_np2Tensor(_l) for _l in l]
+    #return [_np2Tensor(_l) for _l in l]
+    return  [torch.from_numpy(np.array(_l)).float() for _l in l]
 
 def add_noise(x, noise='.'):
     if noise is not '.':

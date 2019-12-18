@@ -25,8 +25,9 @@ if checkpoint.ok:
     # args.model = 'BSR'
     model = model.Model(args, checkpoint)
 
-
+    print('Model created successfully.')
     loader = data.Data(args)
+    print('Data loader created successfully.')
     loss = loss.Loss(args, checkpoint) if not args.test_only else None
     t = Trainer(args, loader, model, loss, checkpoint)
     while not t.terminate():

@@ -13,7 +13,7 @@ parser.add_argument('--n_threads', type=int, default=12,
                     help='number of threads for data loading')
 parser.add_argument('--cpu', action='store_true',
                     help='use cpu only')
-parser.add_argument('--n_GPUs', type=int, default=1,
+parser.add_argument('--n_GPUs', type=int, default=2,
                     help='number of GPUs')
 parser.add_argument('--seed', type=int, default=1,
                     help='random seed')
@@ -23,7 +23,7 @@ parser.add_argument('--dir_data', type=str, default='/share/Dataset/',
                     help='dataset directory')
 parser.add_argument('--dir_demo', type=str, default='../test',
                     help='demo image directory')
-parser.add_argument('--data_train', type=str, default='DIV2K',
+parser.add_argument('--data_train', type=str, default='PHAC',
                     help='train dataset name')
 parser.add_argument('--data_test', type=str, default='Set5',
                     help='test dataset name')
@@ -37,7 +37,7 @@ parser.add_argument('--n_val', type=int, default=5,
                     help='number of validation set')
 parser.add_argument('--offset_val', type=int, default=800,
                     help='validation index offest')
-parser.add_argument('--ext', type=str, default='sep_reset',
+parser.add_argument('--ext', type=str, default='npy',
                     help='dataset file extension')
 parser.add_argument('--scale', default='2',
                     help='super resolution scale')
@@ -149,6 +149,10 @@ parser.add_argument('--testpath', type=str, default='../test/DIV2K_val_LR_our',
                     help='dataset directory for testing')
 parser.add_argument('--testset', type=str, default='Set5',
                     help='dataset name for testing')
+parser.add_argument('--generate', type=bool, default=False,
+                    help='generate frames for video')
+
+parser.add_argument('--gen_set', type=str, default='s1_10', help='defines the set used to generate results')
 
 args = parser.parse_args()
 template.set_template(args)

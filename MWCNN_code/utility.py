@@ -121,7 +121,10 @@ class checkpoint():
         plt.close(fig)
 
     def save_results(self, filename, save_list, idx, scale):
-        filename = '{}/results/{}_x{}_{}'.format(self.dir, filename, scale, idx)
+        if (self.args.gen_set and self.args.generate):
+            filename = '{}/results_{}/{}_{}'.format(self.dir,self.args.gen_set.split('/')[-1], filename, idx)
+        else:
+            filename = '{}/results/{}_x{}_{}'.format(self.dir, filename, scale, idx)
         postfix = ('SR', 'LR', 'HR')
         for v, p in zip(save_list, postfix):
             normalized = v[0].data.mul(255 / self.args.rgb_range)

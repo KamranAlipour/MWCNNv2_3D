@@ -12,6 +12,13 @@ import scipy.io as sio
 from data import common
 import numpy as np
 # import model
+import logging
+
+import imageio
+
+from skimage.metrics import structural_similarity as ssim
+
+logging.basicConfig(filename='training.log', level=logging.INFO)
 
 class Trainer():
     def __init__(self, args, loader, my_model, my_loss, ckp):
@@ -22,6 +29,8 @@ class Trainer():
         self.loader_train = loader.loader_train
         self.loader_test = loader.loader_test
         self.model = my_model
+        #if (torch.cuda.device_count() > 1):
+        #   self.model = nn.DataParallel(self.model)
 
         self.loss = my_loss
         self.optimizer = utility.make_optimizer(args, self.model)
@@ -35,6 +44,7 @@ class Trainer():
             for _ in range(len(ckp.log)): self.scheduler.step()
 
         self.error_last = 1e5
+        self.generate = args.generate # whether we want to generate videos
 
 
 
@@ -59,7 +69,9 @@ class Trainer():
 
 
         timer_data, timer_model = utility.timer(), utility.timer()
-        for batch, (lr, hr, _) in enumerate(self.loader_train):
+        for batch, (lr, hr,_) in enumerate(self.loader_train):
+            #print(lr.shape)
+            #print(hr.shape)
             lr, hr = self.prepare([lr, hr])
             # print(scale_factor[0,0,0,0])
             timer_data.hold()
@@ -105,24 +117,41 @@ class Trainer():
         no_eval = 0
         # self.model_NLEst.eval()
         # self.model_KMEst.eval()
+        #print(self.args.gen_set,self.args.gen_set.split('/')[-1])
+        result_dir = 'experiment/'+self.args.save+'/results_'+self.args.gen_set.split('/')[-1]
+        file_prefix = 'test_case'
+        if (self.generate):
+           if not os.path.exists(result_dir):
+                os.makedirs(result_dir)
 
         timer_test = utility.timer()
+        
         with torch.no_grad():
 
             for idx_scale, scale in enumerate(scale_list):
                 eval_acc = 0
                 self.loader_test.dataset.set_scale(idx_scale)
-
-                tqdm_test = tqdm(self.loader_test, ncols=120)
-                for idx_img, (lr, hr, filename) in enumerate(tqdm_test):
+                lr_im_list = []
+                sr_im_list = []
+                hr_im_list = []
+                psnr_vals = []
+                ssim_vals = []
+                mse_vals = []
+                psnr_input_vals = []
+                ssim_input_vals = []
+                mse_input_vals = []
+                #tqdm_test = tqdm(self.loader_test, ncols=120)
+                tqdm_test = tqdm(self.loader_test)
+                for idx_img, (lr, hr) in enumerate(tqdm_test):
                     np.random.seed(seed=0)
-                    filename = filename[0]
+                    filename = file_prefix+'_'+str(idx_img).zfill(3)
                     # sz = lr.size()
                     # scale_tensor = torch.ones([1, 1, sz[2], sz[3]]).float() * (scale / 80.0)
                     if not no_eval:
                         lr, hr = self.prepare([lr, hr])
                     else:
                         lr = self.prepare([lr])[0]
+                    
                     #sz = lr.size()
                     #scale_tensor = torch.ones([1, 1, sz[2], sz[3]]).float() * (2.0 / 80)
                     
@@ -134,12 +163,28 @@ class Trainer():
                     sr = self.model(lr, idx_scale)
 
                     sr = utility.quantize(sr, self.args.rgb_range)
+                    #lr_im_list.append(np.array(lr.cpu())[0,0,:,:])
+                    #sr_im_list.append(np.array(sr.cpu())[0,0,:,:])
+                    #hr_im_list.append(np.array(hr.cpu())[0,0,:,:])
 
                     save_list = [sr]
-                    eval_acc += utility.calc_psnr(
+                    psnr_val = utility.calc_psnr(
                         sr, hr, scale, self.args.rgb_range,
                         benchmark=self.loader_test.dataset.benchmark
                     )
+                    ssim_val = ssim(hr[0,0].cpu().data.numpy(), sr[0,0].cpu().data.numpy(), data_range=np.max(sr.cpu().data.numpy()) - np.min(sr.cpu().data.numpy()))
+                    if (self.generate):
+                        psnr_input_val = utility.calc_psnr(
+                            lr, hr, scale, self.args.rgb_range,
+                            benchmark=self.loader_test.dataset.benchmark
+                        )
+                        psnr_input_vals.append(psnr_input_val)
+                        psnr_vals.append(psnr_val)
+                        ssim_input_val = ssim(hr[0,0].cpu().data.numpy(), lr[0,0].cpu().data.numpy(), data_range=np.max(lr.cpu().data.numpy()) - np.min(lr.cpu().data.numpy()))
+                        ssim_vals.append(ssim_val)
+                        ssim_input_vals.append(ssim_input_val)
+                        
+                    eval_acc += psnr_val
                     save_list.extend([lr, hr])
                     # # if not no_eval:
                     # #     eval_acc += utility.calc_psnr(
@@ -150,10 +195,22 @@ class Trainer():
                     #
                     if self.args.save_results:
                         self.ckp.save_results(filename, save_list, idx_img, scale)
-
-
-
-
+                if (self.generate):
+                #    lr_writer = imageio.get_writer('lr_s2.mp4', fps=10)
+                #    sr_writer = imageio.get_writer('sr_s2.mp4', fps=10)
+                #    hr_writer = imageio.get_writer('hr_s2.mp4', fps=10)
+                #    for (lr_im,sr_im,hr_im) in zip(lr_im_list,sr_im_list,hr_im_list):
+                #        lr_writer.append_data(lr_im)
+                #        sr_writer.append_data(sr_im)
+                #        hr_writer.append_data(hr_im)
+                #    lr_writer.close()
+                #    sr_writer.close()
+                #    hr_writer.close()
+                    np.save(result_dir+'/'+self.args.gen_set.split('/')[-1]+'_psnr_vals.npy',np.array(psnr_vals))
+                    np.save(result_dir+'/'+self.args.gen_set.split('/')[-1]+'_psnr_input_vals.npy',np.array(psnr_input_vals))
+                    np.save(result_dir+'/'+self.args.gen_set.split('/')[-1]+'_ssim_vals.npy',np.array(ssim_vals))
+                    np.save(result_dir+'/'+self.args.gen_set.split('/')[-1]+'_ssim_input_vals.npy',np.array(ssim_input_vals))
+                   
                 self.ckp.log[-1, idx_scale] = eval_acc / len(self.loader_test)
                 best = self.ckp.log.max(0)
                 self.ckp.write_log(

@@ -10,7 +10,7 @@ import torch
 import torch.utils.data as data
 
 class Benchmark(srdata.SRData):
-    def __init__(self, args, train=True):
+    def __init__(self, args, train=True, generate=False):
         super(Benchmark, self).__init__(args, train, benchmark=True)
 
     def _scan(self):
