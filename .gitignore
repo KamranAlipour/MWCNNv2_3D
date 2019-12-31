@@ -8,3 +8,4 @@ __pycache__/
 *.log
 start_notebook.sh
 MWCNN_code/videos/
+data_gen/
