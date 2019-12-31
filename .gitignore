@@ -1,4 +1,4 @@
-data_gen/A_data_generation.m
+data_gen/*.m
 DIV2K/
 MWCNN/
 .ipynb_checkpoints/
@@ -8,4 +8,3 @@ __pycache__/
 *.log
 start_notebook.sh
 MWCNN_code/videos/
-data_gen/
