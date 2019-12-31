@@ -1,6 +1,10 @@
 data_gen/A_data_generation.m
-../DIV2K/
-../MWCNN/
+DIV2K/
+MWCNN/
 .ipynb_checkpoints/
 data/
 experiment/
+__pycache__/
+*.log
+start_notebook.sh
+MWCNN_code/videos/
