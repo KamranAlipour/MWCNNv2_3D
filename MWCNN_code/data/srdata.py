@@ -52,8 +52,6 @@ class SRData(data.Dataset):
         self.images_hr = hr_flist #self._scan()
         self.images_lr = lr_flist
 
-
-
     def _scan(self):
         raise NotImplementedError
     #
@@ -97,7 +95,6 @@ class SRData(data.Dataset):
         # lr = self.images_lr[self.idx_scale][idx]
         hr = self.images_hr[idx]
         lr = self.images_lr[idx]
-
         if self.args.ext == 'npy':
             hr = np.expand_dims(np.load(hr),axis=0)
             lr = np.expand_dims(np.load(lr),axis=0)
