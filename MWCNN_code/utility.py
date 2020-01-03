@@ -166,7 +166,10 @@ def calc_psnr(sr, hr, scale, rgb_range, benchmark=False):
     #valid = diff[:, :, shave:-shave, shave:-shave]
     valid = diff
     mse = valid.pow(2).mean()
-    return -10 * math.log10(mse)
+    if mse == 0.0 :
+       return -1.0
+    else:
+       return -10 * math.log10(mse)
 
 def make_optimizer(args, my_model):
     trainable = filter(lambda x: x.requires_grad, my_model.parameters())
