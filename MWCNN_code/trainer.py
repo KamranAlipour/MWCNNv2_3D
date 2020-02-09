@@ -17,7 +17,7 @@ import logging
 import imageio
 
 from skimage.metrics import structural_similarity as ssim
-
+import pdb
 logging.basicConfig(filename='training.log', level=logging.INFO)
 
 class Trainer():
@@ -144,7 +144,7 @@ class Trainer():
                 tqdm_test = tqdm(self.loader_test)
                 for idx_img, (lr, hr) in enumerate(tqdm_test):
                     np.random.seed(seed=0)
-                    filename = file_prefix+'_'+str(idx_img).zfill(3)
+                    filename = file_prefix+'_'+str(idx_img).zfill(4)
                     # sz = lr.size()
                     # scale_tensor = torch.ones([1, 1, sz[2], sz[3]]).float() * (scale / 80.0)
                     if not no_eval:
@@ -159,7 +159,6 @@ class Trainer():
                     # hr_ = torch.squeeze(hr_)
                     # hr_ = hr_.numpy()
                     # lr = hr
-
                     sr = self.model(lr, idx_scale)
 
                     sr = utility.quantize(sr, self.args.rgb_range)

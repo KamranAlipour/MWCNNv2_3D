@@ -13,6 +13,9 @@ import h5py
 
 import glob
 
+import cv2
+import pdb
+
 class SRData(data.Dataset):
     def __init__(self, args, train=True, benchmark=False):
         self.args = args
@@ -21,19 +24,33 @@ class SRData(data.Dataset):
         self.benchmark = benchmark
         self.scale = args.scale
         self.idx_scale = 0
+        self.ext = args.ext
+        self.slide = args.slide # number of pixels to slide in width
         if train:
-            hr_flist = sorted(glob.glob('../data/npy_img/train*_target.npy'))
-            lr_flist = sorted(glob.glob('../data/npy_img/train*_input.npy'))
+            data_dir = args.train_data_dir
+            hr_flist = sorted(glob.glob(os.path.join(data_dir,'train*_target.'+self.ext)))
+            lr_flist = sorted(glob.glob(os.path.join(data_dir,'train*_input.'+self.ext)))
             #mat = h5py.File('../MWCNN/imdb_gray.mat')
             #self.args.ext = 'mat'
             hrd = []
             lrd = []
             for hrf in hr_flist:
                #print('loading HR file: '+hrf)
-               hrd.append(np.load(hrf))
+               if args.ext == 'npy': 
+                   hrd.append(np.load(hrf))
+               elif args.ext == 'jpg':
+                   hrd.append(np.array(cv2.imread(hrf),dtype=np.float))
+               else:
+                   raise ValueError('The training dataset has unknown extension.')                                    
             for lrf in lr_flist:
                #print('loading LR file: '+lrf)
-               lrd.append(np.load(lrf))
+               if args.ext == 'npy':
+                   lrd.append(np.load(lrf))
+               elif args.ext == 'jpg':
+                   lrd.append(np.array(cv2.imread(lrf),dtype=np.float))
+               else:
+                   raise ValueError('The training dataset has unknown extension.')                 
+               #lrd.append(np.load(lrf))
             hrd = np.expand_dims(np.array(hrd),axis=3)
             lrd = np.expand_dims(np.array(lrd),axis=3)
             #self.hr_data = mat['images']['labels'][:,:,:,:]
@@ -43,14 +60,25 @@ class SRData(data.Dataset):
             #print(self.hr_data.shape)
 
         if self.split == 'test':
-            hr_flist = sorted(glob.glob('../data/npy_img/test*_target.npy'))
-            lr_flist = sorted(glob.glob('../data/npy_img/test*_input.npy'))
+            hr_flist = sorted(glob.glob('../data/npy_img/test*_target.'+self.ext))
+            lr_flist = sorted(glob.glob('../data/npy_img/test*_input.'+self.ext))
             #self._set_filesystem(args.dir_data)
         if args.generate:
-            hr_flist = sorted(glob.glob(args.gen_set+'_*_target.npy'))
-            lr_flist = sorted(glob.glob(args.gen_set+'_*_input.npy'))
+            hr_flist = sorted(glob.glob(args.gen_set+'_*_target.'+self.ext))
+            lr_flist = sorted(glob.glob(args.gen_set+'_*_input.'+self.ext))
         self.images_hr = hr_flist #self._scan()
+        self.list_len = len(self.images_hr)
+        self.img_count = self.list_len
         self.images_lr = lr_flist
+        nslides = 1
+        if args.slide > 0:
+           if args.ext == 'jpg':
+               data_height = cv2.imread(self.images_hr[0]).shape[0]
+               data_width = cv2.imread(self.images_hr[0]).shape[1]
+               nslides = int((data_width - data_height) / args.slide) + 1
+        self.nslides = nslides
+        self.list_len = nslides * self.list_len
+        
 
     def _scan(self):
         raise NotImplementedError
@@ -65,8 +93,27 @@ class SRData(data.Dataset):
     #     raise NotImplementedError
 
     def __getitem__(self, idx):
-        hr, lr = self._load_file(idx)
-        #print(hr.shape)
+        if self.nslides == 1:
+            hr, lr = self._load_file(idx)
+        else:
+            imgid = int(idx / self.nslides)
+            hr, lr = self._load_file(imgid)
+            slideid = idx - imgid * self.nslides 
+            #print('getting item {} means slide {} in frame {}'.format(idx,slideid,imgid))
+            height = hr.shape[0]
+            hr = hr[:,(slideid*self.slide):(slideid*self.slide+height)]
+            lr = lr[:,(slideid*self.slide):(slideid*self.slide+height)]
+            if hr.shape[0] != 512 or hr.shape[1] != 512:
+                hr = cv2.resize(hr,(512,512))
+                lr = cv2.resize(lr,(512,512))
+                if hr.max() > hr.min():
+                   hr = (hr - hr.min()) / (hr.max() - hr.min())
+                if lr.max() > lr.min():
+                   lr = (lr - lr.min()) / (lr.max() - lr.min())
+                hr = np.expand_dims(hr,axis=0)
+                lr = np.expand_dims(lr,axis=0)
+        #print ('HR: {}x{} {} {} '.format(hr.shape[0],hr.shape[1],hr.min(),hr.max()))
+        #print ('LR: {}x{} {} {} '.format(lr.shape[0],lr.shape[1],lr.min(),lr.max()))
         if self.train:
             lr, hr, scale = self._get_patch(hr,lr)
             #print(hr.shape)
@@ -85,12 +132,15 @@ class SRData(data.Dataset):
 
 
     def __len__(self):
-        return len(self.images_hr)
+        #print('get length {}'.format(self.list_len))
+        return self.list_len
 
     def _get_index(self, idx):
+        #print('get index {}'.format(idx))
         return idx
 
     def _load_file(self, idx):
+        #print('loading file idx {}'.format(idx))
         idx = self._get_index(idx)
         # lr = self.images_lr[self.idx_scale][idx]
         hr = self.images_hr[idx]
@@ -98,9 +148,11 @@ class SRData(data.Dataset):
         if self.args.ext == 'npy':
             hr = np.expand_dims(np.load(hr),axis=0)
             lr = np.expand_dims(np.load(lr),axis=0)
+        elif self.args.ext == 'jpg':
+            hr = np.array(cv2.imread(hr)[:,:,0])
+            lr = np.array(cv2.imread(lr)[:,:,0])
         elif self.args.ext == 'img' or self.benchmark:
             filename = hr
-
             hr = misc.imread(hr)
         elif self.args.ext.find('sep') >= 0:
             filename = hr
@@ -114,7 +166,6 @@ class SRData(data.Dataset):
             filename = str(idx + 1)
 
         #filename = os.path.splitext(os.path.split(filename)[-1])[0]
-
         return hr, lr
 
     def _get_patch(self, hr, lr):
