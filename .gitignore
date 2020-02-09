@@ -6,8 +6,11 @@ data/
 experiment/
 __pycache__/
 *.log
+training_log.txt
+training_err.txt
 start_notebook.sh
 MWCNN_code/videos/
 MWCNN_code/*.mat
 MWCNN_code/*.png
 MWCNN_code/3dfigs/
+
