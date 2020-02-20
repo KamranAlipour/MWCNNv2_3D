@@ -32,6 +32,7 @@ class SRData(data.Dataset):
             lr_flist = sorted(glob.glob(os.path.join(data_dir,'train*_input.'+self.ext)))
             #mat = h5py.File('../MWCNN/imdb_gray.mat')
             #self.args.ext = 'mat'
+            """
             hrd = []
             lrd = []
             for hrf in hr_flist:
@@ -51,17 +52,19 @@ class SRData(data.Dataset):
                else:
                    raise ValueError('The training dataset has unknown extension.')                 
                #lrd.append(np.load(lrf))
-            hrd = np.expand_dims(np.array(hrd),axis=3)
-            lrd = np.expand_dims(np.array(lrd),axis=3)
+             """
+            #hrd = np.expand_dims(np.array(hrd),axis=3)
+            #lrd = np.expand_dims(np.array(lrd),axis=3)
             #self.hr_data = mat['images']['labels'][:,:,:,:]
-            self.hr_data = hrd
-            self.lr_data = lrd
-            self.num = self.hr_data.shape[0]
+            #self.hr_data = hrd
+            #self.lr_data = lrd
+            #self.num = self.hr_data.shape[0]
             #print(self.hr_data.shape)
 
         if self.split == 'test':
-            hr_flist = sorted(glob.glob('../data/npy_img/test*_target.'+self.ext))
-            lr_flist = sorted(glob.glob('../data/npy_img/test*_input.'+self.ext))
+            data_dir = args.train_data_dir
+            hr_flist = sorted(glob.glob(os.path.join(data_dir,'test*_target.'+self.ext)))
+            lr_flist = sorted(glob.glob(os.path.join(data_dir,'test*_input.'+self.ext)))
             #self._set_filesystem(args.dir_data)
         if args.generate:
             hr_flist = sorted(glob.glob(args.gen_set+'_*_target.'+self.ext))
@@ -76,6 +79,7 @@ class SRData(data.Dataset):
                data_height = cv2.imread(self.images_hr[0]).shape[0]
                data_width = cv2.imread(self.images_hr[0]).shape[1]
                nslides = int((data_width - data_height) / args.slide) + 1
+               print("no. sides: {}".format(nslides))
         self.nslides = nslides
         self.list_len = nslides * self.list_len
         
@@ -99,6 +103,10 @@ class SRData(data.Dataset):
             imgid = int(idx / self.nslides)
             hr, lr = self._load_file(imgid)
             slideid = idx - imgid * self.nslides 
+            if hr.shape[0] == 1 :
+               hr = hr[0]
+            if lr.shape[0] == 1 :
+               lr = lr[0]
             #print('getting item {} means slide {} in frame {}'.format(idx,slideid,imgid))
             height = hr.shape[0]
             hr = hr[:,(slideid*self.slide):(slideid*self.slide+height)]
@@ -151,6 +159,8 @@ class SRData(data.Dataset):
         elif self.args.ext == 'jpg':
             hr = np.array(cv2.imread(hr)[:,:,0])
             lr = np.array(cv2.imread(lr)[:,:,0])
+            hr = np.expand_dims(hr,axis=0)
+            lr = np.expand_dims(lr,axis=0)
         elif self.args.ext == 'img' or self.benchmark:
             filename = hr
             hr = misc.imread(hr)
@@ -158,10 +168,10 @@ class SRData(data.Dataset):
             filename = hr
             # lr = np.load(lr)
             hr = np.load(hr)
-        elif self.args.ext == 'mat' or self.train:
-            hr = self.hr_data[idx, :, :, :]
-            hr = np.squeeze(hr.transpose((1, 2, 0)))
-            filename = str(idx) + '.png'
+        #elif self.args.ext == 'mat' or self.train:
+        #    hr = self.hr_data[idx, :, :, :]
+        #    hr = np.squeeze(hr.transpose((1, 2, 0)))
+        #    filename = str(idx) + '.png'
         else:
             filename = str(idx + 1)
 
