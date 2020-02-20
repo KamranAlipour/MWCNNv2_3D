@@ -151,7 +151,6 @@ class Trainer():
                         lr, hr = self.prepare([lr, hr])
                     else:
                         lr = self.prepare([lr])[0]
-                    
                     #sz = lr.size()
                     #scale_tensor = torch.ones([1, 1, sz[2], sz[3]]).float() * (2.0 / 80)
                     
@@ -160,7 +159,6 @@ class Trainer():
                     # hr_ = hr_.numpy()
                     # lr = hr
                     sr = self.model(lr, idx_scale)
-
                     sr = utility.quantize(sr, self.args.rgb_range)
                     #lr_im_list.append(np.array(lr.cpu())[0,0,:,:])
                     #sr_im_list.append(np.array(sr.cpu())[0,0,:,:])
