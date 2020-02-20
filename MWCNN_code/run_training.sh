@@ -1,1 +1,1 @@
-python main.py --model MWCNN --save MWCNN_DeNoising --scale 15 --n_feats 64 --save_results --print_model --patch_size 256 --batch_size 8 --print_every 100 --lr 1.024e-4 --lr_decay 100 --n_colors 1 --save_models --task_type denoising
+python main.py --model MWCNN --save MWCNN_DeNoising --train_data_dir "/home/data500/npy_img" --scale 15 --n_feats 64 --save_results --print_model --patch_size 256 --batch_size 8 --print_every 100 --lr 1.024e-4 --lr_decay 100 --n_colors 1 --save_models --task_type denoising
