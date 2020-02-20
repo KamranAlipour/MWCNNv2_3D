@@ -7,9 +7,9 @@ import os
 import time
 
 noises = ['1k'] # '1k' '4k' '2k'
-sample = "ucsdLEDsm"
+sample = "ucsdLED2sm"
 
-input_folder = '../data/'+sample+'/'
+input_folder = '/home/data500/'+sample+'/'
 print('Input folder: {}'.format(input_folder))
 target_jpgs = sorted(glob.glob(os.path.join(input_folder,'*_'+noises[0]+'_*target.jpg')))
 target_vol = []
@@ -31,8 +31,8 @@ width = 390
 height = 90
 slide = 10 # number of pixels slided
 nslide = int((width - height)/slide) + 1 # number of slided frames within each input frame (390 - 90)/10 + 1
-sample = "ucsdLEDsm" # "ucsd900all"
-folder_prefix = 'experiment/MWCNN_DeNoising/'+sample+'_results'
+
+folder_prefix = 'experiment/MWCNN_DeNoising_norm/'+sample+'_results'
 #noises = list(map(lambda x: x.split('/')[-1], glob.glob(folder_prefix+'/*')))
 for n in noises:
     data_folder = os.path.join(folder_prefix,noises[0]) # folder_prefix+n+'/'
