@@ -157,8 +157,12 @@ class SRData(data.Dataset):
             hr = np.expand_dims(np.load(hr),axis=0)
             lr = np.expand_dims(np.load(lr),axis=0)
         elif self.args.ext == 'jpg':
-            hr = np.array(cv2.imread(hr)[:,:,0])
-            lr = np.array(cv2.imread(lr)[:,:,0])
+            hr = np.array(cv2.cvtColor(cv2.imread(hr), cv2.COLOR_BGR2GRAY))
+            lr = np.array(cv2.cvtColor(cv2.imread(lr), cv2.COLOR_BGR2GRAY))
+            if hr.max() > hr.min():
+               hr = (hr - hr.min()) / (hr.max() - hr.min())
+            if lr.max() > lr.min():
+               lr = (lr - lr.min()) / (lr.max() - lr.min())
             hr = np.expand_dims(hr,axis=0)
             lr = np.expand_dims(lr,axis=0)
         elif self.args.ext == 'img' or self.benchmark:
