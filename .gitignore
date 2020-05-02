@@ -1,4 +1,5 @@
 data_gen/*.m
+datasets/
 DIV2K/
 MWCNN/
 .ipynb_checkpoints/
