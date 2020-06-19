@@ -55,7 +55,7 @@ parser.add_argument('--task_type', type=str, default='denoising',
                     help='image restoration tasks')
 
 # Model specifications
-parser.add_argument('--model', default='BSR',
+parser.add_argument('--model', default='MWCNN3D',
                     help='model name')
 
 parser.add_argument('--act', type=str, default='relu',
