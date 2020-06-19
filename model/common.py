@@ -77,7 +77,7 @@ def dwt_init(x):
 
     return torch.cat((x_LL, x_HL, x_LH, x_HH), 1)
 
-def iwt_init(x):
+def iwt_init(x,cpu):
     r = 2
     in_batch, in_channel, in_height, in_width = x.size()
     #print([in_batch, in_channel, in_height, in_width])
@@ -88,8 +88,10 @@ def iwt_init(x):
     x3 = x[:, out_channel * 2:out_channel * 3, :, :] / 2
     x4 = x[:, out_channel * 3:out_channel * 4, :, :] / 2
     
-
-    h = torch.zeros([out_batch, out_channel, out_height, out_width]).float().cuda()
+    if cpu:
+        h = torch.zeros([out_batch, out_channel, out_height, out_width]).float()
+    else:
+        h = torch.zeros([out_batch, out_channel, out_height, out_width]).float().cuda()
 
     h[:, :, 0::2, 0::2] = x1 - x2 - x3 + x4
     h[:, :, 1::2, 0::2] = x1 - x2 + x3 - x4
@@ -132,12 +134,13 @@ class DWT(nn.Module):
         return dwt_init(x)
 
 class IWT(nn.Module):
-    def __init__(self):
+    def __init__(self,args):
         super(IWT, self).__init__()
+        self.cpu = args.cpu
         self.requires_grad = False
 
-    def forward(self, x):
-        return iwt_init(x)
+    def forward(self,x):
+        return iwt_init(x,self.cpu)
 
 
 class MeanShift(nn.Conv2d):

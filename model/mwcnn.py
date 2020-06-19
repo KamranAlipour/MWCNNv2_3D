@@ -18,7 +18,7 @@ class MWCNN(nn.Module):
         act = nn.ReLU(True)
 
         self.DWT = common.DWT()
-        self.IWT = common.IWT()
+        self.IWT = common.IWT(args)
 
         n = 1
         m_head = [common.BBlock(conv, nColor, n_feats, kernel_size, act=act)]
