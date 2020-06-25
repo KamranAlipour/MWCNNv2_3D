@@ -155,6 +155,7 @@ parser.add_argument('--generate', type=bool, default=False,
 parser.add_argument('--gen_set', type=str, default='s1_10', help='defines the set used to generate results')
 parser.add_argument('--slide', type=int, default=0, help='pixel slides in width')
 parser.add_argument('--train_data_dir',type=str, default='../data/npy_img', help='defines the directory of training data')
+parser.add_argument('--depth', type=int, default=8,help='input depth')
 args = parser.parse_args()
 template.set_template(args)
 
