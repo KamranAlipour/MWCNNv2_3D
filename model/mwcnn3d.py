@@ -33,11 +33,12 @@ class MWCNN3D(nn.Module):
         d_l2 = []
         d_l2.append(common.BBlock(conv, n_feats * 16, n_feats * 8, kernel_size, act=act, bn=False))
         d_l2.append(common.DBlock_com1(conv, n_feats * 8, n_feats * 8, kernel_size, act=act, bn=False))
-        pro_l3 = []
-        pro_l3.append(common.BBlock(conv, n_feats * 64, n_feats * 32, kernel_size, act=act, bn=False))
-        pro_l3.append(common.DBlock_com(conv, n_feats * 32, n_feats * 32, kernel_size, act=act, bn=False))
-        pro_l3.append(common.DBlock_inv(conv, n_feats * 32, n_feats * 32, kernel_size, act=act, bn=False))
-        pro_l3.append(common.BBlock(conv, n_feats * 32, n_feats * 64, kernel_size, act=act, bn=False))
+        d_l3 = []
+        d_l3.append(common.BBlock(conv, n_feats * 64, n_feats * 32, kernel_size, act=act, bn=False))
+        d_l3.append(common.DBlock_com(conv, n_feats * 32, n_feats * 32, kernel_size, act=act, bn=False))
+
+        i_l3 = [common.DBlock_inv(conv, n_feats * 32, n_feats * 32, kernel_size, act=act, bn=False)]
+        i_l3.append(common.BBlock(conv, n_feats * 32, n_feats * 64, kernel_size, act=act, bn=False))
 
         i_l2 = [common.DBlock_inv1(conv, n_feats * 8, n_feats * 8, kernel_size, act=act, bn=False)]
         i_l2.append(common.BBlock(conv, n_feats * 8, n_feats * 16, kernel_size, act=act, bn=False))
@@ -50,10 +51,11 @@ class MWCNN3D(nn.Module):
         m_tail = [conv(n_feats, nColor, kernel_size)]
 
         self.head = nn.Sequential(*m_head)
+        self.d_l3 = nn.Sequential(*d_l3)
         self.d_l2 = nn.Sequential(*d_l2)
         self.d_l1 = nn.Sequential(*d_l1)
         self.d_l0 = nn.Sequential(*d_l0)
-        self.pro_l3 = nn.Sequential(*pro_l3)
+        self.i_l3 = nn.Sequential(*i_l3)
         self.i_l2 = nn.Sequential(*i_l2)
         self.i_l1 = nn.Sequential(*i_l1)
         self.i_l0 = nn.Sequential(*i_l0)
@@ -63,10 +65,11 @@ class MWCNN3D(nn.Module):
         x0 = self.d_l0(self.head(x))
         x1 = self.d_l1(self.DWT(x0))
         x2 = self.d_l2(self.DWT(x1))
-        x_ = self.IWT(self.pro_l3(self.DWT(x2))) + x2
+        x3 = self.d_l3(self.DWT(x2))
+        x_ = self.IWT(self.i_l3(x3)) + x2
         x_ = self.IWT(self.i_l2(x_)) + x1
         x_ = self.IWT(self.i_l1(x_)) + x0
-        x = self.tail(self.i_l0(x_)) + x
+        x  = self.tail(self.i_l0(x_)) + x
 
         return x
 
