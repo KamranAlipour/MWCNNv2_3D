@@ -35,4 +35,3 @@ if checkpoint.ok:
         t.test()
 
     checkpoint.done()
-

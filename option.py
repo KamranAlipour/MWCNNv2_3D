@@ -66,7 +66,7 @@ parser.add_argument('--extend', type=str, default='.',
                     help='pre-trained model directory')
 parser.add_argument('--n_resblocks', type=int, default=20,
                     help='number of residual blocks')
-parser.add_argument('--n_feats', type=int, default=64,
+parser.add_argument('--n_feats', type=int, default=32,
                     help='number of feature maps')
 parser.add_argument('--res_scale', type=float, default=1,
                     help='residual scaling')
@@ -169,4 +169,3 @@ for arg in vars(args):
         vars(args)[arg] = True
     elif vars(args)[arg] == 'False':
         vars(args)[arg] = False
-
