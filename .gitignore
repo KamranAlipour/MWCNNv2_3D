@@ -3,7 +3,6 @@ datasets/
 DIV2K/
 MWCNN/
 .ipynb_checkpoints/
-data/
 experiment/
 __pycache__/
 *.log
