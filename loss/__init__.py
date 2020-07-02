@@ -117,7 +117,7 @@ class Loss(nn.modules.loss._Loss):
             plt.close(fig)
 
     def get_loss_module(self):
-        if self.n_GPUs == 1:
+        if self.cpu or self.n_GPUs == 1:
             return self.loss_module
         else:
             return self.loss_module.module

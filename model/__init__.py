@@ -59,7 +59,7 @@ class Model(nn.Module):
             return self.model(x)
 
     def get_model(self):
-        if self.n_GPUs == 1:
+        if self.cpu or self.n_GPUs == 1:
             return self.model
         else:
             return self.model.module
